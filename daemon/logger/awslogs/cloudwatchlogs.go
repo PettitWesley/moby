@@ -437,14 +437,6 @@ func (l *logStream) Log(msg *logger.Message) error {
 	if l.closed {
 		return errors.New("awslogs is closed")
 	}
-	if l.logNonBlocking {
-		select {
-		case l.messages <- msg:
-			return nil
-		default:
-			return errors.New("awslogs buffer is full")
-		}
-	}
 	l.messages <- msg
 	return nil
 }
