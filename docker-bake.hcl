@@ -19,19 +19,19 @@ variable "DOCKER_GITCOMMIT" {
 
 # Docker version such as 23.0.0-dev. Automatically generated through Git ref.
 variable "VERSION" {
-  default = ""
+  default = "awslogs-non-blocking-wesley"
 }
 
 # The platform name, such as "Docker Engine - Community".
 variable "PLATFORM" {
-  default = ""
+  default = "Dev"
 }
 
 # The product name, used to set version.ProductName, which is used to set
 # BuildKit's ExportedProduct variable in order to show useful error messages
 # to users when a certain version of the product doesn't support a BuildKit feature.
 variable "PRODUCT" {
-  default = ""
+  default = "Docker"
 }
 
 # Sets the version.DefaultProductLicense string, such as "Community Engine".
@@ -50,18 +50,18 @@ variable "PACKAGER_NAME" {
 # GITHUB_REF is the actual ref that triggers the workflow and used as version
 # when tag is pushed: https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
 variable "GITHUB_REF" {
-  default = ""
+  default = "https://github.com/moby/moby/pull/45227/commits/0ab3ebeba9c2d3785e05670f8ce707972fdfb268"
 }
 
 # GITHUB_SHA is the commit SHA that triggered the workflow and used as commit.
 # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
 variable "GITHUB_SHA" {
-  default = ""
+  default = "0ab3ebeba9c2d3785e05670f8ce707972fdfb268"
 }
 
 # Defines the output folder
 variable "DESTDIR" {
-  default = ""
+  default = "build"
 }
 function "bindir" {
   params = [defaultdir]
@@ -109,12 +109,12 @@ target "_platforms" {
 target "binary" {
   inherits = ["_common"]
   target = "binary"
-  output = [bindir(DOCKER_STATIC == "1" ? "binary" : "dynbinary")]
+  output = ["bundles/binary/dockerd"]
 }
 
 target "dynbinary" {
   inherits = ["binary"]
-  output = [bindir("dynbinary")]
+  output = ["bundles/binary/dockerd"]
   args = {
     DOCKER_STATIC = "0"
   }
@@ -145,7 +145,7 @@ target "binary-smoketest" {
 target "all" {
   inherits = ["_common"]
   target = "all"
-  output = [bindir(DOCKER_STATIC == "1" ? "binary" : "dynbinary")]
+  output = ["bundles/binary/dockerd"]
 }
 
 target "all-cross" {
