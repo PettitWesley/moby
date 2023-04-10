@@ -916,4 +916,5 @@ func (b *eventBatch) isEmpty() bool {
 func (b *eventBatch) reset() {
 	b.bytes = 0
 	b.batch = b.batch[:0]
+	b.msgBytes = 0
 }
