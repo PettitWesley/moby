@@ -173,7 +173,7 @@ func (r *messageRing) Enqueue(m *Message) error {
 	if r.msgsSeen % 10 == 0 {
 		r.cumulativeSize += r.sizeBytes
 		r.checks += 1
-		logrus.Infof("current: %d, avg: %d", r.sizeBytes, r.cumulativeSize / checks)
+		logrus.Infof("current: %d, avg: %d", r.sizeBytes, r.cumulativeSize / r.checks)
 	}
 	if (checks == 1000) {
 		r.checks = 0
