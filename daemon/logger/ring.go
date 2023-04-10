@@ -146,6 +146,7 @@ type messageRing struct {
 	// profiling
 	msgsSeen int64
 	cumulativeSize int64
+	maxSizeSeen int64
     checks int64
 }
 
@@ -170,10 +171,18 @@ func (r *messageRing) Enqueue(m *Message) error {
 
 	r.msgsSeen += 1
 
+	if (r.sizeBytes > r.maxSizeSeen) {
+		r.maxSizeSeen = r.sizeBytes
+	}
+
 	if r.msgsSeen % 10 == 0 {
 		r.cumulativeSize += r.sizeBytes
 		r.checks += 1
-		logrus.Infof("current: %d, avg: %d", r.sizeBytes, r.cumulativeSize / r.checks)
+		logrus.WithFields(logrus.Fields{
+			"max KB: ": r.maxSizeSeen / 1000,
+			"avg KB: ": (r.cumulativeSize / r.checks) / 1000,
+			"current KB ": r.sizeBytes / 1000,
+		  }).Info("[BACKLOG]")
 	}
 	if (r.checks == 1000) {
 		r.checks = 0
@@ -190,7 +199,7 @@ func (r *messageRing) Enqueue(m *Message) error {
 		r.mu.Unlock()
 		logrus.WithFields(logrus.Fields{
 			"current buffer bytes: ": r.sizeBytes,
-		  }).Info("[RESULT] LOG LOSS 🚨")
+		  }).Info("[LOG LOSS 🚨]")
 		
 		return nil
 	}
