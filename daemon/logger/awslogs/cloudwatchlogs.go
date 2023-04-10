@@ -633,7 +633,7 @@ func (l *logStream) collectBatch(created chan bool) {
 // invalid byte sequences, we calculate the length of each event assuming that
 // this replacement happens.
 func (l *logStream) processEvent(batch *eventBatch, bytes []byte, timestamp int64) {
-	batch.msgBytes += len(bytes)
+	batch.msgBytes += int64(len(bytes))
 	if l.startTime == 0 {
 		l.startTime = time.Now().UnixNano()
 	}
