@@ -141,6 +141,9 @@ type messageRing struct {
 	maxBytes  int64 // max buffer size size
 	queue     []*Message
 	closed    bool
+
+	// profiling
+	msgsSeen int64
 }
 
 func newRing(maxBytes int64) *messageRing {
@@ -162,6 +165,13 @@ func newRing(maxBytes int64) *messageRing {
 func (r *messageRing) Enqueue(m *Message) error {
 	mSize := int64(len(m.Line))
 
+	r.msgsSeen += 1
+
+	if r.msgsSeen % 10 == 0 {
+		logrus.Infof("current buffer bytes: %d", r.sizeBytes)
+		
+	}
+
 	r.mu.Lock()
 	if r.closed {
 		r.mu.Unlock()
@@ -170,6 +180,10 @@ func (r *messageRing) Enqueue(m *Message) error {
 	if mSize+r.sizeBytes > r.maxBytes && len(r.queue) > 0 {
 		r.wait.Signal()
 		r.mu.Unlock()
+		logrus.WithFields(log.Fields{
+			"current buffer bytes: ": r.sizeBytes,
+		  }).Info("[RESULT] LOG LOSS 🚨")
+		
 		return nil
 	}
 
