@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -180,7 +181,7 @@ func (r *messageRing) Enqueue(m *Message) error {
 	if mSize+r.sizeBytes > r.maxBytes && len(r.queue) > 0 {
 		r.wait.Signal()
 		r.mu.Unlock()
-		logrus.WithFields(log.Fields{
+		logrus.WithFields(logrus.Fields{
 			"current buffer bytes: ": r.sizeBytes,
 		  }).Info("[RESULT] LOG LOSS 🚨")
 		
