@@ -146,7 +146,7 @@ type messageRing struct {
 	// profiling
 	msgsSeen int64
 	cumulativeSize int64
-    checks int
+    checks int64
 }
 
 func newRing(maxBytes int64) *messageRing {
@@ -175,7 +175,7 @@ func (r *messageRing) Enqueue(m *Message) error {
 		r.checks += 1
 		logrus.Infof("current: %d, avg: %d", r.sizeBytes, r.cumulativeSize / r.checks)
 	}
-	if (checks == 1000) {
+	if (r.checks == 1000) {
 		r.checks = 0
 		r.cumulativeSize = 0
 	}
