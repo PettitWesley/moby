@@ -2,9 +2,9 @@ package logger // import "github.com/docker/docker/daemon/logger"
 
 import (
 	"errors"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -144,10 +144,10 @@ type messageRing struct {
 	closed    bool
 
 	// profiling
-	msgsSeen int64
+	msgsSeen       int64
 	cumulativeSize int64
-	maxSizeSeen int64
-    checks int64
+	maxSizeSeen    int64
+	checks         int64
 }
 
 func newRing(maxBytes int64) *messageRing {
@@ -171,20 +171,20 @@ func (r *messageRing) Enqueue(m *Message) error {
 
 	r.msgsSeen += 1
 
-	if (r.sizeBytes > r.maxSizeSeen) {
+	if r.sizeBytes > r.maxSizeSeen {
 		r.maxSizeSeen = r.sizeBytes
 	}
 
-	if r.msgsSeen % 10 == 0 {
+	if r.msgsSeen%10 == 0 {
 		r.cumulativeSize += r.sizeBytes
 		r.checks += 1
-		logrus.WithFields(logrus.Fields{
-			"max KB: ": r.maxSizeSeen / 1000,
-			"avg KB: ": (r.cumulativeSize / r.checks) / 1000,
-			"current KB ": r.sizeBytes / 1000,
-		  }).Info("[BACKLOG]")
+		// logrus.WithFields(logrus.Fields{
+		// 	"max KB: ": r.maxSizeSeen / 1000,
+		// 	"avg KB: ": (r.cumulativeSize / r.checks) / 1000,
+		// 	"current KB ": r.sizeBytes / 1000,
+		//   }).Info("[BACKLOG]")
 	}
-	if (r.checks == 1000) {
+	if r.checks == 10000 {
 		r.checks = 0
 		r.cumulativeSize = 0
 	}
@@ -198,9 +198,11 @@ func (r *messageRing) Enqueue(m *Message) error {
 		r.wait.Signal()
 		r.mu.Unlock()
 		logrus.WithFields(logrus.Fields{
-			"current buffer bytes: ": r.sizeBytes,
-		  }).Info("[LOG LOSS 🚨]")
-		
+			"max KB: ":    r.maxSizeSeen / 1000,
+			"avg KB: ":    (r.cumulativeSize / r.checks) / 1000,
+			"current KB ": r.sizeBytes / 1000,
+		}).Info("[LOG LOSS 🚨]")
+
 		return nil
 	}
 

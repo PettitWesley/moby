@@ -80,6 +80,9 @@ type logStream struct {
 	lock               sync.RWMutex
 	closed             bool
 	sequenceToken      *string
+
+	bytesSent int64
+	startTime int64
 }
 
 type logStreamConfig struct {
@@ -129,6 +132,8 @@ func init() {
 type eventBatch struct {
 	batch []wrappedEvent
 	bytes int
+
+	msgBytes int64
 }
 
 // New creates an awslogs logger using the configuration passed in on the
@@ -159,6 +164,8 @@ func New(info logger.Info) (logger.Logger, error) {
 		multilinePattern:   containerStreamConfig.multilinePattern,
 		client:             client,
 		messages:           make(chan *logger.Message, containerStreamConfig.maxBufferedEvents),
+		bytesSent:          0,
+		startTime:          0,
 	}
 
 	creationDone := make(chan bool)
@@ -626,6 +633,10 @@ func (l *logStream) collectBatch(created chan bool) {
 // invalid byte sequences, we calculate the length of each event assuming that
 // this replacement happens.
 func (l *logStream) processEvent(batch *eventBatch, bytes []byte, timestamp int64) {
+	batch.msgBytes += bytes
+	if l.startTime == 0 {
+		l.startTime = time.Now().UnixNano()
+	}
 	for len(bytes) > 0 {
 		// Split line length so it does not exceed the maximum
 		splitOffset, lineBytes := findValidSplit(string(bytes), maximumBytesPerEvent)
@@ -709,6 +720,14 @@ func (l *logStream) publishBatch(batch *eventBatch) {
 		logrus.Error(err)
 	} else {
 		l.sequenceToken = nextSequenceToken
+		l.bytesSent += batch.msgBytes
+		var timeDiff int64
+		timeDiff = time.Now().UnixNano() - l.startTime
+		/* convert to ms */
+		timeDiff = timeDiff / 1000000
+		var throughput int64
+		throughput = l.bytesSent / timeDiff
+		logrus.Infof("[AWSLOGS] throughput: %d bytes/ms KB/s, bytes=%d, runtime=%d ms", throughput, l.bytesSent, timeDiff)
 	}
 }
 
@@ -833,8 +852,9 @@ func unwrapEvents(events []wrappedEvent) []types.InputLogEvent {
 
 func newEventBatch() *eventBatch {
 	return &eventBatch{
-		batch: make([]wrappedEvent, 0),
-		bytes: 0,
+		batch:    make([]wrappedEvent, 0),
+		bytes:    0,
+		msgBytes: 0,
 	}
 }
 
