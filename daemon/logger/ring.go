@@ -185,10 +185,13 @@ func (r *messageRing) Enqueue(m *Message) error {
 		//   }).Info("[BACKLOG]")
 	}
 	if r.checks == 10000 {
-		r.checks = 0
+		r.checks = 1
 		r.cumulativeSize = 0
 	}
 
+	if r.checks == 0 {
+		r.checks = 1
+	}
 	r.mu.Lock()
 	if r.closed {
 		r.mu.Unlock()
