@@ -78,6 +78,7 @@ type logStream struct {
 	lock               sync.RWMutex
 	closed             bool
 	sequenceToken      *string
+	int                eventsSent
 }
 
 type logStreamConfig struct {
@@ -648,6 +649,8 @@ func (l *logStream) publishBatch(batch *eventBatch) {
 	if batch.isEmpty() {
 		return
 	}
+
+	logrus.Infof("Sent %d events total to %s", l.eventsSent, l.logStreamName)
 	cwEvents := unwrapEvents(batch.events())
 
 	nextSequenceToken, err := l.putLogEvents(cwEvents, l.sequenceToken)
