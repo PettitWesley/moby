@@ -145,6 +145,7 @@ type messageRing struct {
 	maxBytes  int64 // max buffer size size
 	queue     []*Message
 	closed    bool
+	totalMessagesDropped int64
 }
 
 func newRing(maxBytes int64) *messageRing {
@@ -174,7 +175,8 @@ func (r *messageRing) Enqueue(m *Message) error {
 	if mSize+r.sizeBytes > r.maxBytes && len(r.queue) > 0 {
 		r.wait.Signal()
 		r.mu.Unlock()
-		logrus.Infof("non-blocking buffer: dropping message %d bytes", mSize)
+		r.totalMessagesDropped += 1
+		logrus.Infof("non-blocking buffer: dropping message %d bytes, %d dropped", mSize, r.totalMessagesDropped)
 		return nil
 	}
 
