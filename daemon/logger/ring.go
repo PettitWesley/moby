@@ -174,6 +174,7 @@ func (r *messageRing) Enqueue(m *Message) error {
 	if mSize+r.sizeBytes > r.maxBytes && len(r.queue) > 0 {
 		r.wait.Signal()
 		r.mu.Unlock()
+		logrus.Infof("non-blocking buffer: dropping message %d bytes", mSize)
 		return nil
 	}
 
