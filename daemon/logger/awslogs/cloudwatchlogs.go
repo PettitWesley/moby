@@ -650,8 +650,10 @@ func (l *logStream) publishBatch(batch *eventBatch) {
 		return
 	}
 
-	logrus.Infof("Sent %d events total to %s", l.eventsSent, l.logStreamName)
 	cwEvents := unwrapEvents(batch.events())
+	l.eventsSent += len(cwEvents)
+	logrus.Infof("Sent %d events total to %s", l.eventsSent, l.logStreamName)
+
 
 	nextSequenceToken, err := l.putLogEvents(cwEvents, l.sequenceToken)
 
