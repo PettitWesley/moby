@@ -78,7 +78,7 @@ type logStream struct {
 	lock               sync.RWMutex
 	closed             bool
 	sequenceToken      *string
-	int                eventsSent
+	eventsSent         int
 }
 
 type logStreamConfig struct {
