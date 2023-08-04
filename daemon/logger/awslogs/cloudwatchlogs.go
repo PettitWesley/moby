@@ -358,6 +358,7 @@ func newAWSLogsClient(info logger.Info) (api, error) {
 	// attach endpoint to cloudwatchlogs config
 	if endpoint != nil {
 		sess.Config.Endpoint = endpoint
+		sess.Config.DisableSSL = aws.Bool(true)
 	}
 
 	if uri, ok := info.Config[credentialsEndpointKey]; ok {
