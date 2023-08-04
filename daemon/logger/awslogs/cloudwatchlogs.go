@@ -359,6 +359,7 @@ func newAWSLogsClient(info logger.Info) (api, error) {
 	if endpoint != nil {
 		sess.Config.Endpoint = endpoint
 		sess.Config.DisableSSL = aws.Bool(true)
+		logrus.Infof("Disabling SSL and using %s", info.Config[endpointKey])
 	}
 
 	if uri, ok := info.Config[credentialsEndpointKey]; ok {
