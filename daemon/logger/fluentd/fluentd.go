@@ -119,6 +119,8 @@ func (f *fluentd) Log(msg *logger.Message) error {
 		data["partial_last"] = strconv.FormatBool(msg.PLogMetaData.Last)
 	}
 
+	logrus.Infof("%s | %s", msg.Line, f.containerName)
+
 	ts := msg.Timestamp
 	logger.PutMessage(msg)
 	// fluent-logger-golang buffers logs from failures and disconnections,
